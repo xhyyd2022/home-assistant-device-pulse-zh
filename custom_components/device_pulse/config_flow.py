@@ -22,6 +22,8 @@ from .const import (
     CONF_PING_REQUESTS_PER_ATTEMPT,
     CONF_PING_INTERVAL,
     CONF_PING_METHOD,
+    CONF_LOG_LEVEL_DEVICE_OFFLINE,
+    CONF_LOG_LEVEL_FAILED_PINGS,
     CONF_SELECTED_DEVICES,
     CONF_SENSORS_INTEGRATION_SUMMARY_ENABLED,
     CONF_SENSORS_DISCONNECTED_SINCE_ENABLED,
@@ -37,6 +39,8 @@ from .const import (
     DEFAULT_PING_REQUESTS_PER_ATTEMPT,
     DEFAULT_PING_INTERVAL,
     DEFAULT_PING_METHOD,
+    DEFAULT_LOG_LEVEL_DEVICE_OFFLINE,
+    DEFAULT_LOG_LEVEL_FAILED_PINGS,
     DEFAULT_SENSORS_INTEGRATION_SUMMARY_ENABLED,
     DEFAULT_SENSORS_DISCONNECTED_SINCE_ENABLED,
     DEFAULT_SENSORS_FAILED_PINGS_ENABLED,
@@ -66,6 +70,13 @@ GROUP_EDIT_ADD_DEVICE = "group_edit_add_device"
 GROUP_EDIT_REMOVE_DEVICES = "group_edit_remove_devices"
 GROUP_EDIT_UPDATE_DEVICE = "group_edit_update_device"
 GROUP_EDIT_CHANGE_SETTING = "group_edit_change_settings"
+
+LOG_LEVELS = [
+    logging.DEBUG,
+    logging.INFO,
+    logging.WARNING,
+    logging.ERROR,
+]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -106,6 +117,8 @@ class DevicePingMonitorBaseFlow(abc.ABC, _FlowProtocol):
     ping_requests_per_attempt: int = DEFAULT_PING_REQUESTS_PER_ATTEMPT
     ping_interval: int = DEFAULT_PING_INTERVAL
     ping_method: str = DEFAULT_PING_METHOD
+    log_level_failed_pings: int = DEFAULT_LOG_LEVEL_FAILED_PINGS
+    log_level_device_offline: int = DEFAULT_LOG_LEVEL_DEVICE_OFFLINE
     sensors_integration_summary_enabled = DEFAULT_SENSORS_INTEGRATION_SUMMARY_ENABLED
     sensors_failed_pings_enabled = DEFAULT_SENSORS_FAILED_PINGS_ENABLED
     sensors_disconnected_since_enabled = DEFAULT_SENSORS_DISCONNECTED_SINCE_ENABLED
@@ -225,12 +238,7 @@ class DevicePingMonitorBaseFlow(abc.ABC, _FlowProtocol):
             self.sensors_disconnected_since_enabled = bool(user_input[CONF_SENSORS_DISCONNECTED_SINCE_ENABLED])
             self.sensors_last_response_time_enabled = bool(user_input[CONF_SENSORS_LAST_RESPONSE_TIME_ENABLED])
 
-            if self.entry_type == ENTRY_TYPE_INTEGRATION:
-                return await self.async_step_integration_summary()
-            elif self.entry_type == ENTRY_TYPE_CUSTOM_GROUP:
-                return await self.async_step_custom_group_summary()
-            else:
-                return self.async_abort(reason="unknown_config_entry_type")
+            return await self.async_step_general_options()
 
         data_schema = vol.Schema(
             {
@@ -265,6 +273,53 @@ class DevicePingMonitorBaseFlow(abc.ABC, _FlowProtocol):
             },
         )
 
+    async def async_step_general_options(self, user_input: dict[str, Any] | None = None):
+        """Handle the general options step."""
+        if user_input is not None:
+            self.log_level_failed_pings = int(user_input[CONF_LOG_LEVEL_FAILED_PINGS])
+            self.log_level_device_offline = int(user_input[CONF_LOG_LEVEL_DEVICE_OFFLINE])
+
+            if self.entry_type == ENTRY_TYPE_INTEGRATION:
+                return await self.async_step_integration_summary()
+            if self.entry_type == ENTRY_TYPE_CUSTOM_GROUP:
+                return await self.async_step_custom_group_summary()
+            return self.async_abort(reason="unknown_config_entry_type")
+
+        data_schema = vol.Schema(
+            {
+                vol.Required(
+                    CONF_LOG_LEVEL_FAILED_PINGS,
+                    default=str(self.log_level_failed_pings),
+                ): selector.SelectSelector(
+                    selector.SelectSelectorConfig(
+                        options=[
+                            selector.SelectOptionDict(value=str(level), label=logging.getLevelName(level))
+                            for level in LOG_LEVELS
+                        ],
+                        mode=selector.SelectSelectorMode.DROPDOWN,
+                    )
+                ),
+                vol.Required(
+                    CONF_LOG_LEVEL_DEVICE_OFFLINE,
+                    default=str(self.log_level_device_offline),
+                ): selector.SelectSelector(
+                    selector.SelectSelectorConfig(
+                        options=[
+                            selector.SelectOptionDict(value=str(level), label=logging.getLevelName(level))
+                            for level in LOG_LEVELS
+                        ],
+                        mode=selector.SelectSelectorMode.DROPDOWN,
+                    )
+                ),
+            }
+        )
+
+        return self.async_show_form(
+            step_id="general_options",
+            data_schema=data_schema,
+            last_step=False,
+        )
+
     def _get_sensors_summary(self) -> str:
         sensors_enabled = []
         if self.sensors_integration_summary_enabled:
@@ -283,6 +338,12 @@ class DevicePingMonitorBaseFlow(abc.ABC, _FlowProtocol):
         )
 
         return sensors_summary
+
+    def _get_logging_summary(self) -> str:
+        return (
+            f"Failed pings: {logging.getLevelName(self.log_level_failed_pings)}, "
+            f"Device offline: {logging.getLevelName(self.log_level_device_offline)}"
+        )
 
     async def async_step_integration_device_selection_mode(self, user_input: dict[str, Any] | None = None):
         """Handle device selection mode step."""
@@ -453,6 +514,7 @@ class DevicePingMonitorBaseFlow(abc.ABC, _FlowProtocol):
                     device_summary += f"\n  **Only**: {', '.join(included_names)}"
 
         sensors_summary = self._get_sensors_summary()
+        logging_summary = self._get_logging_summary()
 
         detection_time = self._calculate_detection_time(
             self.ping_attempts_before_failure, self.ping_interval
@@ -474,6 +536,7 @@ class DevicePingMonitorBaseFlow(abc.ABC, _FlowProtocol):
                 "ping_interval": str(self.ping_interval),
                 "ping_method": ping_method_label,
                 "sensors": sensors_summary,
+                "logging": logging_summary,
                 "detection_time": detection_time,
             },
         )
@@ -590,6 +653,7 @@ class DevicePingMonitorBaseFlow(abc.ABC, _FlowProtocol):
         group_devices_list = f"{''.join(group_devices)}"
 
         sensors_summary = self._get_sensors_summary()
+        logging_summary = self._get_logging_summary()
 
         detection_time = self._calculate_detection_time(
             self.ping_attempts_before_failure, self.ping_interval
@@ -611,6 +675,7 @@ class DevicePingMonitorBaseFlow(abc.ABC, _FlowProtocol):
                 "ping_interval": str(self.ping_interval),
                 "ping_method": ping_method_label,
                 "sensors": sensors_summary,
+                "logging": logging_summary,
                 "detection_time": detection_time,
             },
         )
@@ -756,6 +821,8 @@ class DevicePingMonitorConfigFlow(
                 CONF_PING_REQUESTS_PER_ATTEMPT: self.ping_requests_per_attempt,
                 CONF_PING_INTERVAL: self.ping_interval,
                 CONF_PING_METHOD: self.ping_method,
+                CONF_LOG_LEVEL_FAILED_PINGS: self.log_level_failed_pings,
+                CONF_LOG_LEVEL_DEVICE_OFFLINE: self.log_level_device_offline,
                 CONF_DEVICE_SELECTION_MODE: self.integration_device_selection_mode,
                 CONF_SENSORS_INTEGRATION_SUMMARY_ENABLED: self.sensors_integration_summary_enabled,
                 CONF_SENSORS_FAILED_PINGS_ENABLED: self.sensors_failed_pings_enabled,
@@ -778,6 +845,8 @@ class DevicePingMonitorConfigFlow(
                 CONF_PING_REQUESTS_PER_ATTEMPT: self.ping_requests_per_attempt,
                 CONF_PING_INTERVAL: self.ping_interval,
                 CONF_PING_METHOD: self.ping_method,
+                CONF_LOG_LEVEL_FAILED_PINGS: self.log_level_failed_pings,
+                CONF_LOG_LEVEL_DEVICE_OFFLINE: self.log_level_device_offline,
                 CONF_SENSORS_INTEGRATION_SUMMARY_ENABLED: self.sensors_integration_summary_enabled,
                 CONF_SENSORS_FAILED_PINGS_ENABLED: self.sensors_failed_pings_enabled,
                 CONF_SENSORS_DISCONNECTED_SINCE_ENABLED: self.sensors_disconnected_since_enabled,
@@ -805,6 +874,8 @@ class DevicePingMonitorOptionsFlow(
         self.ping_requests_per_attempt = self.config_entry.options.get(CONF_PING_REQUESTS_PER_ATTEMPT, DEFAULT_PING_REQUESTS_PER_ATTEMPT)
         self.ping_interval = self.config_entry.options.get(CONF_PING_INTERVAL, DEFAULT_PING_INTERVAL)
         self.ping_method = self.config_entry.options.get(CONF_PING_METHOD, DEFAULT_PING_METHOD)
+        self.log_level_failed_pings = self.config_entry.options.get(CONF_LOG_LEVEL_FAILED_PINGS, DEFAULT_LOG_LEVEL_FAILED_PINGS)
+        self.log_level_device_offline = self.config_entry.options.get(CONF_LOG_LEVEL_DEVICE_OFFLINE, DEFAULT_LOG_LEVEL_DEVICE_OFFLINE)
         self.sensors_integration_summary_enabled = self.config_entry.options.get(CONF_SENSORS_INTEGRATION_SUMMARY_ENABLED, DEFAULT_SENSORS_INTEGRATION_SUMMARY_ENABLED)
         self.sensors_failed_pings_enabled = self.config_entry.options.get(CONF_SENSORS_FAILED_PINGS_ENABLED, DEFAULT_SENSORS_FAILED_PINGS_ENABLED)
         self.sensors_disconnected_since_enabled = self.config_entry.options.get(CONF_SENSORS_DISCONNECTED_SINCE_ENABLED, DEFAULT_SENSORS_DISCONNECTED_SINCE_ENABLED)
@@ -1007,6 +1078,8 @@ class DevicePingMonitorOptionsFlow(
                 CONF_PING_REQUESTS_PER_ATTEMPT: self.ping_requests_per_attempt,
                 CONF_PING_INTERVAL: self.ping_interval,
                 CONF_PING_METHOD: self.ping_method,
+                CONF_LOG_LEVEL_FAILED_PINGS: self.log_level_failed_pings,
+                CONF_LOG_LEVEL_DEVICE_OFFLINE: self.log_level_device_offline,
                 CONF_SENSORS_INTEGRATION_SUMMARY_ENABLED: self.sensors_integration_summary_enabled,
                 CONF_SENSORS_FAILED_PINGS_ENABLED: self.sensors_failed_pings_enabled,
                 CONF_SENSORS_DISCONNECTED_SINCE_ENABLED: self.sensors_disconnected_since_enabled,
@@ -1025,6 +1098,8 @@ class DevicePingMonitorOptionsFlow(
                 CONF_PING_REQUESTS_PER_ATTEMPT: self.ping_requests_per_attempt,
                 CONF_PING_INTERVAL: self.ping_interval,
                 CONF_PING_METHOD: self.ping_method,
+                CONF_LOG_LEVEL_FAILED_PINGS: self.log_level_failed_pings,
+                CONF_LOG_LEVEL_DEVICE_OFFLINE: self.log_level_device_offline,
                 CONF_SENSORS_INTEGRATION_SUMMARY_ENABLED: self.sensors_integration_summary_enabled,
                 CONF_SENSORS_FAILED_PINGS_ENABLED: self.sensors_failed_pings_enabled,
                 CONF_SENSORS_DISCONNECTED_SINCE_ENABLED: self.sensors_disconnected_since_enabled,

@@ -41,7 +41,7 @@
             },
             "integration_summary": {
                 "title": "Configuration Summary",
-                "description": "**Integration:** {integration_name}\n**Devices:** {device_summary}\n**Ping Settings:**\n- Method: {ping_method}\n- Failed Pings Before Offline: {ping_attempts_before_failure}\n- Ping Requests Per Attempt: {ping_requests_per_attempt}\n- Ping Interval: {ping_interval} seconds\n\n**Sensors:** {sensors}\n\n⏱️ **Offline Detection Time:** about {detection_time}\n\nPress Submit to complete the configuration."
+                "description": "**Integration:** {integration_name}\n**Devices:** {device_summary}\n**Ping Settings:**\n- Method: {ping_method}\n- Failed Pings Before Offline: {ping_attempts_before_failure}\n- Ping Requests Per Attempt: {ping_requests_per_attempt}\n- Ping Interval: {ping_interval} seconds\n\n**Sensors:** {sensors}\n**Logging:** {logging}\n\n⏱️ **Offline Detection Time:** about {detection_time}\n\nPress Submit to complete the configuration."
             },
             "custom_group_info": {
                 "title": "Create Devices Group",
@@ -74,7 +74,7 @@
             },
             "custom_group_summary": {
                 "title": "Group Summary",
-                "description": "**Group:** {group_name}\n**Devices:**\n{group_devices_list}\n\n**Ping Settings:**\n- Method: {ping_method}\n- Failed Pings Before Offline: {ping_attempts_before_failure}\n- Ping Requests Per Attempt: {ping_requests_per_attempt}\n- Ping Interval: {ping_interval} seconds\n\n**Sensors:** {sensors}\n\n⏱️ **Offline Detection Time:** about {detection_time}\n\nPress Submit to complete the configuration."
+                "description": "**Group:** {group_name}\n**Devices:**\n{group_devices_list}\n\n**Ping Settings:**\n- Method: {ping_method}\n- Failed Pings Before Offline: {ping_attempts_before_failure}\n- Ping Requests Per Attempt: {ping_requests_per_attempt}\n- Ping Interval: {ping_interval} seconds\n\n**Sensors:** {sensors}\n**Logging:** {logging}\n\n⏱️ **Offline Detection Time:** about {detection_time}\n\nPress Submit to complete the configuration."
             },
             "monitor_parameters": {
                 "title": "Ping Parameters",
@@ -106,6 +106,18 @@
                     "sensors_failed_pings_enabled": "Create a sensor that shows the number of consecutive failed pings for each device.",
                     "sensors_disconnected_since_enabled": "Create a sensor that records the time when a device went offline.",
                     "sensors_last_response_time_enabled": "Create a sensor that shows the response time of the last successful ping."
+                }
+            },
+            "general_options": {
+                "title": "Logging Options",
+                "description": "Choose the log level for failed pings and for devices that go offline.",
+                "data": {
+                    "log_level_failed_pings": "Failed ping log level",
+                    "log_level_device_offline": "Device offline log level"
+                },
+                "data_description": {
+                    "log_level_failed_pings": "Set how verbose logging should be when a ping fails.",
+                    "log_level_device_offline": "Set the log level used when a device is marked offline."
                 }
             }
         },
@@ -149,7 +161,7 @@
             },
             "integration_summary": {
                 "title": "Configuration Summary",
-                "description": "**Integration:** {integration_name}\n**Devices:** {device_summary}\n**Ping Settings:**\n- Method: {ping_method}\n- Failed Pings Before Offline: {ping_attempts_before_failure}\n- Ping Requests Per Attempt: {ping_requests_per_attempt}\n- Ping Interval: {ping_interval} seconds\n\n**Sensors:** {sensors}\n\n⏱️ **Offline Detection Time:** about {detection_time}\n\nPress Submit to complete the configuration."
+                "description": "**Integration:** {integration_name}\n**Devices:** {device_summary}\n**Ping Settings:**\n- Method: {ping_method}\n- Failed Pings Before Offline: {ping_attempts_before_failure}\n- Ping Requests Per Attempt: {ping_requests_per_attempt}\n- Ping Interval: {ping_interval} seconds\n\n**Sensors:** {sensors}\n**Logging:** {logging}\n\n⏱️ **Offline Detection Time:** about {detection_time}\n\nPress Submit to complete the configuration."
             },
             "custom_group_edit_action": {
                 "title": "Edit Devices Group",
@@ -196,7 +208,7 @@
             },
             "custom_group_summary": {
                 "title": "Group Summary",
-                "description": "**Group:** {group_name}\n**Devices:**\n{group_devices_list}\n\n**Ping Settings:**\n- Method: {ping_method}\n- Failed Pings Before Offline: {ping_attempts_before_failure}\n- Ping Requests Per Attempt: {ping_requests_per_attempt}\n- Ping Interval: {ping_interval} seconds\n\n**Sensors:** {sensors}\n\n⏱️ **Offline Detection Time:** about {detection_time}\n\nPress Submit to complete the configuration."
+                "description": "**Group:** {group_name}\n**Devices:**\n{group_devices_list}\n\n**Ping Settings:**\n- Method: {ping_method}\n- Failed Pings Before Offline: {ping_attempts_before_failure}\n- Ping Requests Per Attempt: {ping_requests_per_attempt}\n- Ping Interval: {ping_interval} seconds\n\n**Sensors:** {sensors}\n**Logging:** {logging}\n\n⏱️ **Offline Detection Time:** about {detection_time}\n\nPress Submit to complete the configuration."
             },
             "monitor_parameters": {
                 "title": "Ping Parameters",
@@ -229,6 +241,18 @@
                     "sensors_disconnected_since_enabled": "Create a sensor that records the time when a device went offline.",
                     "sensors_last_response_time_enabled": "Create a sensor that shows the response time of the last successful ping."
                 }
+            },
+            "general_options": {
+                "title": "Logging Options",
+                "description": "Choose the log level for failed pings and for devices that go offline.",
+                "data": {
+                    "log_level_failed_pings": "Failed ping log level",
+                    "log_level_device_offline": "Device offline log level"
+                },
+                "data_description": {
+                    "log_level_failed_pings": "Set how verbose logging should be when a ping fails.",
+                    "log_level_device_offline": "Set the log level used when a device is marked offline."
+                }
             }
         },
         "error": {
@@ -260,7 +284,7 @@
                 "group_edit_add_device": "Add New Device",
                 "group_edit_remove_devices": "Remove Devices",
                 "group_edit_update_device": "Update Existing Device",
-                "group_edit_change_settings": "Change Group Settings (Ping and Options Sensors)"
+                "group_edit_change_settings": "Change Group Settings (Ping, Sensors, and Logging)"
             }
         },
         "group_add_device_or_continue": {

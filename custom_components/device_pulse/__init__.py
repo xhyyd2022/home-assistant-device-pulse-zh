@@ -36,11 +36,15 @@ from .const import (
     CONF_PING_REQUESTS_PER_ATTEMPT,
     CONF_PING_INTERVAL,
     CONF_PING_METHOD,
+    CONF_LOG_LEVEL_DEVICE_OFFLINE,
+    CONF_LOG_LEVEL_FAILED_PINGS,
     CONF_SELECTED_DEVICES,
     DEFAULT_PING_ATTEMPTS_BEFORE_FAILURE,
     DEFAULT_PING_REQUESTS_PER_ATTEMPT,
     DEFAULT_PING_INTERVAL,
     DEFAULT_PING_METHOD,
+    DEFAULT_LOG_LEVEL_DEVICE_OFFLINE,
+    DEFAULT_LOG_LEVEL_FAILED_PINGS,
     DEVICE_SELECTION_ALL,
     DEVICE_SELECTION_EXCLUDE,
     DEVICE_SELECTION_INCLUDE,
@@ -237,11 +241,15 @@ async def async_setup_entry(
         ping_requests_per_attempt: int = int(config_entry.options.get(CONF_PING_REQUESTS_PER_ATTEMPT, DEFAULT_PING_REQUESTS_PER_ATTEMPT))
         ping_interval: int = int(config_entry.options.get(CONF_PING_INTERVAL, DEFAULT_PING_INTERVAL))
         ping_method: str = config_entry.options.get(CONF_PING_METHOD, DEFAULT_PING_METHOD)
+        log_level_failed_pings = config_entry.options.get(CONF_LOG_LEVEL_FAILED_PINGS, DEFAULT_LOG_LEVEL_FAILED_PINGS)
+        log_level_device_offline = config_entry.options.get(CONF_LOG_LEVEL_DEVICE_OFFLINE, DEFAULT_LOG_LEVEL_DEVICE_OFFLINE)
 
         _LOGGER.info("[%s]   Attempts Before Failure: %d", integration.friendly_name, ping_attempts_before_failure)
         _LOGGER.info("[%s]   Requests per Attempt: %d", integration.friendly_name, ping_requests_per_attempt)
         _LOGGER.info("[%s]   Interval: %ds", integration.friendly_name, ping_interval)
         _LOGGER.info("[%s]   Ping Method: %s", integration.friendly_name, ping_method)
+        _LOGGER.info("[%s]   Failed Pings Log Level: %s",integration.friendly_name, logging.getLevelName(log_level_failed_pings))
+        _LOGGER.info("[%s]   Device Offline Log Level: %s",integration.friendly_name, logging.getLevelName(log_level_device_offline))
         _LOGGER.info("[%s] Found [%d] valid devices", integration.friendly_name, len(devices))
 
         # Determine the ICMP ping client based on method and privileges
@@ -295,7 +303,9 @@ async def async_setup_entry(
                     ping_instance,
                     ping_attempts_before_failure,
                     ping_requests_per_attempt,
-                    ping_interval
+                    ping_interval,
+                    log_level_failed_pings,
+                    log_level_device_offline,
                 )
                 await coordinator.async_config_entry_first_refresh()
 

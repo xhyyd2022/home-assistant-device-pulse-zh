@@ -17,6 +17,8 @@ from .const import (
     DEFAULT_PING_ATTEMPTS_BEFORE_FAILURE,
     DEFAULT_PING_REQUESTS_PER_ATTEMPT,
     DEFAULT_PING_INTERVAL,
+    DEFAULT_LOG_LEVEL_DEVICE_OFFLINE,
+    DEFAULT_LOG_LEVEL_FAILED_PINGS,
     EVENT_DEVICE_CAME_ONLINE,
     EVENT_DEVICE_WENT_OFFLINE,
     PING_METHOD_ARP,
@@ -51,6 +53,8 @@ class DevicePingCoordinator(DataUpdateCoordinator[PingResult]):
         ping_attempts_before_failure: int = DEFAULT_PING_ATTEMPTS_BEFORE_FAILURE,
         ping_requests_per_attempt: int = DEFAULT_PING_REQUESTS_PER_ATTEMPT,
         ping_interval: int = DEFAULT_PING_INTERVAL,
+        log_level_failed_pings: int = DEFAULT_LOG_LEVEL_FAILED_PINGS,
+        log_level_device_offline: int = DEFAULT_LOG_LEVEL_DEVICE_OFFLINE,
     ) -> None:
         """Initialize the coordinator."""
         self.integration: IntegrationData = integration
@@ -64,6 +68,8 @@ class DevicePingCoordinator(DataUpdateCoordinator[PingResult]):
         self.failed_started_at = None
         self.last_response_time = None
         self._first_update = True
+        self._log_level_failed_pings = log_level_failed_pings
+        self._log_level_device_offline = log_level_device_offline
 
         # Remove unnecessary logs from inner coordinator methods
         if _LOGGER.isEnabledFor(logging.DEBUG):
@@ -129,7 +135,8 @@ class DevicePingCoordinator(DataUpdateCoordinator[PingResult]):
             self.failed_pings += 1
             self.last_response_time = None
 
-            _LOGGER.debug(
+            _LOGGER.log(
+                self._log_level_failed_pings,
                 "[%s] Device [%s][%s] ping failed, consecutive failures: %d/%d",
                 self.integration.friendly_name,
                 self.device_entry.name,
@@ -142,7 +149,8 @@ class DevicePingCoordinator(DataUpdateCoordinator[PingResult]):
             # to avoid false positives on startup
             if self._first_update:
                 is_alive = False
-                _LOGGER.warning(
+                _LOGGER.log(
+                    self._log_level_device_offline,
                     "[%s] Device [%s][%s] initiated OFFLINE",
                     self.integration.friendly_name,
                     self.device_entry.name,
@@ -160,12 +168,8 @@ class DevicePingCoordinator(DataUpdateCoordinator[PingResult]):
                     "failed_pings": self.failed_pings,
                     "disconnected_since": self.failed_started_at,
                 })
-                level = (
-                    _LOGGER.warning
-                    if self.failed_pings == self.ping_attempts_before_failure
-                    else _LOGGER.debug
-                )
-                level(
+                _LOGGER.log(
+                    self._log_level_device_offline,
                     "[%s] Device [%s][%s] is now OFFLINE (%d consecutive failed pings)",
                     self.integration.friendly_name,
                     self.device_entry.name,
@@ -175,7 +179,8 @@ class DevicePingCoordinator(DataUpdateCoordinator[PingResult]):
 
             # This is not the first update, but we haven't reached the failure threshold yet
             elif self.data.is_alive:
-                _LOGGER.warning(
+                _LOGGER.log(
+                    self._log_level_failed_pings,
                     "[%s] Device [%s][%s] ping failed but under failure threshold (%d/%d failed pings)",
                     self.integration.friendly_name,
                     self.device_entry.name,
@@ -209,4 +214,3 @@ class DevicePingCoordinator(DataUpdateCoordinator[PingResult]):
         if isinstance(self.ping, PingDataARP):
             return PING_METHOD_ARP
         return PING_METHOD_ICMP
-
