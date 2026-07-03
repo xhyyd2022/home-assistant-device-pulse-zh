@@ -1,3 +1,5 @@
 {
-  "name": "Device Pulse"
+  "name": "Device Pulse",
+  "zip_release": true,
+  "filename": "device_pulse.zip"
 }

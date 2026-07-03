@@ -1,0 +1,30 @@
+name: HACS release zip
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout tag
+        uses: actions/checkout@v4
+
+      - name: Create ZIP file
+        run: |
+          rm -f device_pulse.zip
+          cd custom_components/device_pulse
+          zip -r ../../device_pulse.zip .
+
+      - name: Upload asset to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          generate_release_notes: true
+          files: device_pulse.zip
