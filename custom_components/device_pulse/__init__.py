@@ -104,6 +104,16 @@ class ConfigEntryRuntimeData:
     reload_task: asyncio.Task[Any] | None = None
 
 
+def _coerce_log_level(value: Any, default: int) -> int:
+    """Return a logging level accepted by Logger.log."""
+    if isinstance(value, int):
+        return value
+    if isinstance(value, str):
+        if value.isdecimal():
+            return int(value)
+    return default
+
+
 async def _async_get_or_create_integration(
     hass: HomeAssistant, domain: str, zc: zeroconf.models.HaZeroconf | None = None
 ) -> utils.IntegrationData:
@@ -241,8 +251,18 @@ async def async_setup_entry(
         ping_requests_per_attempt: int = int(config_entry.options.get(CONF_PING_REQUESTS_PER_ATTEMPT, DEFAULT_PING_REQUESTS_PER_ATTEMPT))
         ping_interval: int = int(config_entry.options.get(CONF_PING_INTERVAL, DEFAULT_PING_INTERVAL))
         ping_method: str = config_entry.options.get(CONF_PING_METHOD, DEFAULT_PING_METHOD)
-        log_level_failed_pings = config_entry.options.get(CONF_LOG_LEVEL_FAILED_PINGS, DEFAULT_LOG_LEVEL_FAILED_PINGS)
-        log_level_device_offline = config_entry.options.get(CONF_LOG_LEVEL_DEVICE_OFFLINE, DEFAULT_LOG_LEVEL_DEVICE_OFFLINE)
+        log_level_failed_pings = _coerce_log_level(
+            config_entry.options.get(
+                CONF_LOG_LEVEL_FAILED_PINGS, DEFAULT_LOG_LEVEL_FAILED_PINGS
+            ),
+            DEFAULT_LOG_LEVEL_FAILED_PINGS,
+        )
+        log_level_device_offline = _coerce_log_level(
+            config_entry.options.get(
+                CONF_LOG_LEVEL_DEVICE_OFFLINE, DEFAULT_LOG_LEVEL_DEVICE_OFFLINE
+            ),
+            DEFAULT_LOG_LEVEL_DEVICE_OFFLINE,
+        )
 
         _LOGGER.info("[%s]   Attempts Before Failure: %d", integration.friendly_name, ping_attempts_before_failure)
         _LOGGER.info("[%s]   Requests per Attempt: %d", integration.friendly_name, ping_requests_per_attempt)
