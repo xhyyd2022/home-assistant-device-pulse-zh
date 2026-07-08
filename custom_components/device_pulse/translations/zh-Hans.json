@@ -99,13 +99,15 @@
           "sensors_integration_summary_enabled": "摘要传感器",
           "sensors_failed_pings_enabled": "Ping 失败计数传感器",
           "sensors_disconnected_since_enabled": "离线时间戳传感器",
-          "sensors_last_response_time_enabled": "最后 Ping 响应时间传感器"
+          "sensors_last_response_time_enabled": "最后 Ping 响应时间传感器",
+          "sensors_total_failed_pings_enabled": "总 Ping 失败计数传感器"
         },
         "data_description": {
           "sensors_integration_summary_enabled": "为 {subject} 创建摘要传感器，显示设备总数和离线设备数。",
           "sensors_failed_pings_enabled": "为每个设备创建传感器，显示当前连续 Ping 失败次数。",
           "sensors_disconnected_since_enabled": "为每个设备创建传感器，记录设备从何时开始离线。",
-          "sensors_last_response_time_enabled": "为每个设备创建传感器，显示最后一次成功 Ping 的响应时间 (ms)。"
+          "sensors_last_response_time_enabled": "为每个设备创建传感器，显示最后一次成功 Ping 的响应时间 (ms)。",
+          "sensors_total_failed_pings_enabled": "为每个设备创建传感器，统计自上次手动重置以来的所有 Ping 失败次数。"
         }
       },
       "general_options": {
@@ -233,13 +235,15 @@
           "sensors_integration_summary_enabled": "摘要传感器",
           "sensors_failed_pings_enabled": "Ping 失败计数传感器",
           "sensors_disconnected_since_enabled": "离线时间戳传感器",
-          "sensors_last_response_time_enabled": "最后 Ping 响应时间传感器"
+          "sensors_last_response_time_enabled": "最后 Ping 响应时间传感器",
+          "sensors_total_failed_pings_enabled": "总 Ping 失败计数传感器"
         },
         "data_description": {
           "sensors_integration_summary_enabled": "为 {subject} 创建摘要传感器，显示设备总数和离线设备数。",
           "sensors_failed_pings_enabled": "为每个设备创建传感器，显示当前连续 Ping 失败次数。",
           "sensors_disconnected_since_enabled": "为每个设备创建传感器，记录设备从何时开始离线。",
-          "sensors_last_response_time_enabled": "为每个设备创建传感器，显示最后一次成功 Ping 的响应时间 (ms)。"
+          "sensors_last_response_time_enabled": "为每个设备创建传感器，显示最后一次成功 Ping 的响应时间 (ms)。",
+          "sensors_total_failed_pings_enabled": "为每个设备创建传感器，统计自上次手动重置以来的所有 Ping 失败次数。"
         }
       },
       "general_options": {
@@ -314,6 +318,12 @@
       "unit_of_measurement": {
         "seconds": "秒"
       }
+    }
+  },
+  "services": {
+    "reset_total_failed_pings": {
+      "name": "重置总 Ping 失败计数",
+      "description": "重置受 Device Pulse 监控实体的总 Ping 失败计数器。"
     }
   }
 }
