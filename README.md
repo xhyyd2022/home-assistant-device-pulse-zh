@@ -113,6 +113,7 @@ If you're using hostnames instead of IP addresses, Device Pulse will automatical
 You can choose to create additional sensors for each monitored device to track:
 
 - The number of failed pings.
+- The total number of failed pings since the last manual reset.
 - The timestamp of the last offline event.
 - The round-trip time of the most recent ping.
 
@@ -145,13 +146,30 @@ Sensors that track the number of offline devices (both per group and globally) e
 
 These attributes allow for easy automation and dynamic UI cards showing current offline devices.
 
+### Total Failed Pings Counter
+
+The optional **Total Failed Pings** sensor counts every failed ping and does not reset automatically when the device comes back online. It exposes `count_started_at`, which stores when the current counting period started.
+
+The counter can be reset from the generated reset button or programmatically:
+
+```yaml
+service: device_pulse.reset_total_failed_pings
+target:
+  entity_id: sensor.example_device_total_failed_pings
+```
+
+> **Note:** Home Assistant does not currently allow this service target selector to be filtered only to the **Total Failed Pings** sensors. When selecting a device, area, floor, or label, the UI may show an entity count that is higher than the counters that will actually be reset. Device Pulse validates the target internally and resets only the matching **Total Failed Pings** counters.
+
+Resetting the counter sets the value to `0` and updates `count_started_at` to the current timestamp.
+
 ### Custom Events
 
-Device Pulse emits three custom events that can be used for advanced automations and tracking device state changes:
+Device Pulse emits custom events that can be used for advanced automations and tracking device state changes:
 
 - `device_pulse_ping_status_updated`: Triggered whenever the ping status of any monitored device sensor changes (from online to offline or vice versa).
 - `device_pulse_device_went_offline`: Triggered when a device transitions from online to offline. The event data includes the device ID.
 - `device_pulse_device_came_online`: Triggered when a device transitions from offline back to online. The event data includes the device ID.
+- `device_pulse_total_failed_pings_reset`: Triggered whenever the total failed pings counter is reset.
 
 These events can be used in automations to trigger notifications, log changes, or synchronize external systems with real-time network status.
 

@@ -98,12 +98,14 @@
                 "data": {
                     "sensors_integration_summary_enabled": "Summary Sensors",
                     "sensors_failed_pings_enabled": "Failed Ping Counter Sensor",
+                    "sensors_total_failed_pings_enabled": "Total Failed Ping Counter Sensor",
                     "sensors_disconnected_since_enabled": "Disconnected Since Timestamp Sensor",
                     "sensors_last_response_time_enabled": "Last Ping Response Time Sensor"
                 },
                 "data_description": {
                     "sensors_integration_summary_enabled": "Create summary sensors for {subject} group, showing the number of monitored devices and the number of offline devices",
                     "sensors_failed_pings_enabled": "Create a sensor that shows the number of consecutive failed pings for each device.",
+                    "sensors_total_failed_pings_enabled": "Create a sensor that counts all failed pings until manually reset.",
                     "sensors_disconnected_since_enabled": "Create a sensor that records the time when a device went offline.",
                     "sensors_last_response_time_enabled": "Create a sensor that shows the response time of the last successful ping."
                 }
@@ -232,12 +234,14 @@
                 "data": {
                     "sensors_integration_summary_enabled": "Summary Sensors",
                     "sensors_failed_pings_enabled": "Failed Ping Counter Sensor",
+                    "sensors_total_failed_pings_enabled": "Total Failed Ping Counter Sensor",
                     "sensors_disconnected_since_enabled": "Disconnected Since Timestamp Sensor",
                     "sensors_last_response_time_enabled": "Last Ping Response Time Sensor"
                 },
                 "data_description": {
                     "sensors_integration_summary_enabled": "Create summary sensors for {subject} group, showing the number of monitored devices and the number of offline devices",
                     "sensors_failed_pings_enabled": "Create a sensor that shows the number of consecutive failed pings for each device.",
+                    "sensors_total_failed_pings_enabled": "Create a sensor that counts all failed pings until manually reset.",
                     "sensors_disconnected_since_enabled": "Create a sensor that records the time when a device went offline.",
                     "sensors_last_response_time_enabled": "Create a sensor that shows the response time of the last successful ping."
                 }
@@ -289,8 +293,8 @@
         },
         "group_add_device_or_continue": {
             "options": {
-              "continue": "Continue to the Next Steps",
-              "add_device": "Add Another Device"
+                "continue": "Continue to the Next Steps",
+                "add_device": "Add Another Device"
             }
         },
         "ping_method": {
@@ -303,6 +307,12 @@
             "unit_of_measurement": {
                 "seconds": "seconds"
             }
+        }
+    },
+    "services": {
+        "reset_total_failed_pings": {
+            "name": "Reset total failed pings",
+            "description": "Reset the total failed ping counter for a monitored Device Pulse entity."
         }
     }
 }

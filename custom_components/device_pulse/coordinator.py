@@ -21,6 +21,7 @@ from .const import (
     DEFAULT_LOG_LEVEL_FAILED_PINGS,
     EVENT_DEVICE_CAME_ONLINE,
     EVENT_DEVICE_WENT_OFFLINE,
+    EVENT_TOTAL_FAILED_PINGS_RESET,
     PING_METHOD_ARP,
     PING_METHOD_ICMP
 )
@@ -66,6 +67,8 @@ class DevicePingCoordinator(DataUpdateCoordinator[PingResult]):
         self.ping_requests_per_attempt = ping_requests_per_attempt
         self.failed_pings = 0
         self.failed_started_at = None
+        self.total_failed_pings = 0
+        self.total_failed_pings_started_at = dt_util.now().isoformat()
         self.last_response_time = None
         self._first_update = True
         self._log_level_failed_pings = log_level_failed_pings
@@ -133,6 +136,7 @@ class DevicePingCoordinator(DataUpdateCoordinator[PingResult]):
                 self.failed_started_at = dt_util.now()
 
             self.failed_pings += 1
+            self.total_failed_pings += 1
             self.last_response_time = None
 
             _LOGGER.log(
@@ -200,6 +204,25 @@ class DevicePingCoordinator(DataUpdateCoordinator[PingResult]):
             ip_address=self.ping.ip_address,
             data=self.ping.data or {},
         )
+
+    def reset_total_failed_pings(self, entity_id: str) -> None:
+        """Reset the total failed ping counter."""
+        old_total_failed_pings = self.total_failed_pings
+        old_count_started_at = self.total_failed_pings_started_at
+
+        self.total_failed_pings = 0
+        self.total_failed_pings_started_at = dt_util.now().isoformat()
+        self.async_update_listeners()
+
+        self.hass.bus.async_fire(EVENT_TOTAL_FAILED_PINGS_RESET, {
+            "entity_id": entity_id,
+            "device_id": self.device_entry.id,
+            "old_total_failed_pings": old_total_failed_pings,
+            "new_total_failed_pings": self.total_failed_pings,
+            "old_count_started_at": old_count_started_at,
+            "new_count_started_at": self.total_failed_pings_started_at,
+            "reset_at": self.total_failed_pings_started_at,
+        })
 
     def _calculate_update_interval(self) -> timedelta:
         """Calculate next update interval with jitter to distribute requests evenly."""

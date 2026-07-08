@@ -2,7 +2,7 @@
 import logging
 
 DOMAIN = "device_pulse"
-PLATFORMS = ["binary_sensor", "sensor"]
+PLATFORMS = ["binary_sensor", "button", "sensor"]
 
 HOST_PARAM_NAMES = ["ip", "address", "ip_address", "ipaddress", "host", "hostname"]
 
@@ -25,6 +25,7 @@ CONF_PING_REQUESTS_PER_ATTEMPT = "ping_requests_per_attempt"
 CONF_PING_INTERVAL = "ping_interval"
 CONF_SENSORS_INTEGRATION_SUMMARY_ENABLED = "sensors_integration_summary_enabled"
 CONF_SENSORS_FAILED_PINGS_ENABLED = "sensors_failed_pings_enabled"
+CONF_SENSORS_TOTAL_FAILED_PINGS_ENABLED = "sensors_total_failed_pings_enabled"
 CONF_SENSORS_DISCONNECTED_SINCE_ENABLED = "sensors_disconnected_since_enabled"
 CONF_SENSORS_LAST_RESPONSE_TIME_ENABLED = "sensors_last_response_time_enabled"
 CONF_PING_METHOD = "ping_method"
@@ -36,6 +37,7 @@ DEFAULT_PING_REQUESTS_PER_ATTEMPT = 1
 DEFAULT_PING_INTERVAL = 60
 DEFAULT_SENSORS_INTEGRATION_SUMMARY_ENABLED = False
 DEFAULT_SENSORS_FAILED_PINGS_ENABLED = False
+DEFAULT_SENSORS_TOTAL_FAILED_PINGS_ENABLED = False
 DEFAULT_SENSORS_DISCONNECTED_SINCE_ENABLED = False
 DEFAULT_SENSORS_LAST_RESPONSE_TIME_ENABLED = False
 DEFAULT_PING_METHOD = PING_METHOD_ICMP
@@ -77,12 +79,18 @@ ENTITY_ATTR_TAG = "tag"
 ENTITY_ATTR_STATE_SINCE = "state_since"
 ENTITY_ATTR_PINGS_FAILED = "pings_failed"
 ENTITY_ATTR_PING_METHOD = "ping_method"
+ENTITY_ATTR_COUNT_STARTED_AT = "count_started_at"
 
 ENTITY_TAG_PING_STATUS = "ping_status"
 ENTITY_TAG_PINGS_FAILED_COUNT = "pings_failed_count"
+ENTITY_TAG_TOTAL_FAILED_PINGS_COUNT = "total_failed_pings_count"
+ENTITY_TAG_RESET_TOTAL_FAILED_PINGS = "reset_total_failed_pings"
 ENTITY_TAG_DISCONNECTED_SINCE = "disconnected_since"
 ENTITY_TAG_LAST_RESPONSE_TIME = "last_response_time"
 
 EVENT_PING_STATUS_UPDATED = f"{DOMAIN}_ping_status_updated"
 EVENT_DEVICE_WENT_OFFLINE = f"{DOMAIN}_device_went_offline"
 EVENT_DEVICE_CAME_ONLINE = f"{DOMAIN}_device_came_online"
+EVENT_TOTAL_FAILED_PINGS_RESET = f"{DOMAIN}_total_failed_pings_reset"
+
+SERVICE_RESET_TOTAL_FAILED_PINGS = "reset_total_failed_pings"

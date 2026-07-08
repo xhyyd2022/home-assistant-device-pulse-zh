@@ -1,0 +1,6 @@
+reset_total_failed_pings:
+  target:
+    entity:
+      integration: device_pulse
+      domain: sensor
+    primary_entities_only: false

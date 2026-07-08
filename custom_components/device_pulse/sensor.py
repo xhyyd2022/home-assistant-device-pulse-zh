@@ -9,10 +9,12 @@ from .const import (
     CONF_SENSORS_INTEGRATION_SUMMARY_ENABLED,
     CONF_SENSORS_DISCONNECTED_SINCE_ENABLED,
     CONF_SENSORS_FAILED_PINGS_ENABLED,
+    CONF_SENSORS_TOTAL_FAILED_PINGS_ENABLED,
     CONF_SENSORS_LAST_RESPONSE_TIME_ENABLED,
     DEFAULT_SENSORS_INTEGRATION_SUMMARY_ENABLED,
     DEFAULT_SENSORS_DISCONNECTED_SINCE_ENABLED,
     DEFAULT_SENSORS_FAILED_PINGS_ENABLED,
+    DEFAULT_SENSORS_TOTAL_FAILED_PINGS_ENABLED,
     DEFAULT_SENSORS_LAST_RESPONSE_TIME_ENABLED,
     ENTRY_TYPE_NETWORK_SUMMARY,
 )
@@ -20,6 +22,7 @@ from .entities import (
     DeviceDisconnectedSinceSensor,
     DeviceFailedPingsSensor,
     DeviceLastResponseTimeSensor,
+    DeviceTotalFailedPingsSensor,
 )
 from .network_status import TotalDevicesCountSensor, TotalDevicesDisconnectedCountSensor
 from .utils import remove_config_entry_orphan_entities
@@ -38,6 +41,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, asyn
 
     if config_entry.options.get(CONF_SENSORS_FAILED_PINGS_ENABLED, DEFAULT_SENSORS_FAILED_PINGS_ENABLED):
         sensors.append(DeviceFailedPingsSensor)
+
+    if config_entry.options.get(CONF_SENSORS_TOTAL_FAILED_PINGS_ENABLED, DEFAULT_SENSORS_TOTAL_FAILED_PINGS_ENABLED):
+        sensors.append(DeviceTotalFailedPingsSensor)
 
     if config_entry.options.get(CONF_SENSORS_DISCONNECTED_SINCE_ENABLED, DEFAULT_SENSORS_DISCONNECTED_SINCE_ENABLED):
         sensors.append(DeviceDisconnectedSinceSensor)

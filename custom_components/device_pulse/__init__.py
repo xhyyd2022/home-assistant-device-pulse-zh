@@ -6,15 +6,26 @@ from functools import partial
 import logging
 from typing import Any
 
+import voluptuous as vol
+
 from homeassistant.config_entries import SIGNAL_CONFIG_ENTRY_CHANGED, ConfigEntryChange
 from homeassistant.components.ping import PingDataICMPLib, PingDataSubProcess, _can_use_icmp_lib_with_privilege
 from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_DEVICE_ID,
+    ATTR_AREA_ID,
+    ATTR_LABEL_ID,
+    ATTR_FLOOR_ID
+)
+from homeassistant.core import Event, HomeAssistant, ServiceCall
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers import event
+from homeassistant.helpers import target as target_helpers
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
@@ -50,6 +61,7 @@ from .const import (
     DEVICE_SELECTION_INCLUDE,
     DOMAIN,
     ENTITY_TAG_PING_STATUS,
+    ENTITY_TAG_TOTAL_FAILED_PINGS_COUNT,
     ENTRY_TYPE_CUSTOM_GROUP,
     ENTRY_TYPE_INTEGRATION,
     ENTRY_TYPE_NETWORK_SUMMARY,
@@ -60,6 +72,7 @@ from .const import (
     PING_METHOD_ARP,
     PING_METHOD_ICMP,
     PLATFORMS,
+    SERVICE_RESET_TOTAL_FAILED_PINGS,
 )
 from .coordinator import DevicePingCoordinator
 
@@ -68,6 +81,17 @@ _LOGGER = logging.getLogger(__name__)
 DATA_CONFIG_KEY: HassKey["ConfigData"] = HassKey(DOMAIN)
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+
+RESET_TOTAL_FAILED_PINGS_SCHEMA = vol.Schema(
+    {
+        vol.Optional(ATTR_ENTITY_ID): vol.Any(None, cv.entity_ids),
+        vol.Optional(ATTR_DEVICE_ID): vol.Any(None, str, [str]),
+        vol.Optional(ATTR_AREA_ID): vol.Any(None, str, [str]),
+        vol.Optional(ATTR_LABEL_ID): vol.Any(None, str, [str]),
+        vol.Optional(ATTR_FLOOR_ID): vol.Any(None, str, [str]),
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 @dataclass
 class ConfigMonitoredIntegrationData:
@@ -112,6 +136,61 @@ def _coerce_log_level(value: Any, default: int) -> int:
         if value.isdecimal():
             return int(value)
     return default
+
+
+async def _async_handle_reset_total_failed_pings_service(
+    hass: HomeAssistant,
+    call: ServiceCall,
+) -> None:
+    """Handle the reset total failed pings service."""
+    target_selection = target_helpers.TargetSelection(call.data)
+    if not target_selection.has_any_target:
+        raise ServiceValidationError(
+            "No entity, device, area, floor, or label target provided"
+        )
+
+    referenced = target_helpers.async_extract_referenced_entity_ids(
+        hass,
+        target_selection,
+        primary_entities_only=False,
+    )
+    entity_registry = er.async_get(hass)
+    entity_ids = referenced.referenced | referenced.indirectly_referenced
+    reset_devices: set[str] = set()
+
+    for entity_id in entity_ids:
+        entity_entry = entity_registry.async_get(entity_id)
+        if not utils.is_tagged_entity_entry(
+            entity_entry,
+            ENTITY_TAG_TOTAL_FAILED_PINGS_COUNT,
+        ):
+            continue
+
+        device_id = entity_entry.device_id
+        if not device_id:
+            raise ServiceValidationError(f"Device not found for entity: {entity_id}")
+
+        if device_id in reset_devices:
+            continue
+
+        for config_entry in hass.config_entries.async_entries(DOMAIN):
+            runtime_data = getattr(config_entry, "runtime_data", None)
+            if (
+                runtime_data
+                and (monitored := runtime_data.monitored.get(device_id))
+            ):
+                monitored.coordinator.reset_total_failed_pings(entity_id)
+                reset_devices.add(device_id)
+                break
+        else:
+            raise ServiceValidationError(
+                f"Device Pulse coordinator not found for entity: {entity_id}"
+            )
+
+    if not reset_devices:
+        raise ServiceValidationError(
+            "No Device Pulse total failed pings sensors found in target"
+        )
 
 
 async def _async_get_or_create_integration(
@@ -178,6 +257,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             domains={"binary_sensor"}
         ),
         partial(_state_changed, hass=hass)
+    )
+    # Register service for total failed pings reset
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_RESET_TOTAL_FAILED_PINGS,
+        partial(_async_handle_reset_total_failed_pings_service, hass),
+        schema=RESET_TOTAL_FAILED_PINGS_SCHEMA,
     )
 
     websocket_api.async_setup(hass)

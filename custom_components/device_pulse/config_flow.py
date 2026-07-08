@@ -28,6 +28,7 @@ from .const import (
     CONF_SENSORS_INTEGRATION_SUMMARY_ENABLED,
     CONF_SENSORS_DISCONNECTED_SINCE_ENABLED,
     CONF_SENSORS_FAILED_PINGS_ENABLED,
+    CONF_SENSORS_TOTAL_FAILED_PINGS_ENABLED,
     CONF_SENSORS_LAST_RESPONSE_TIME_ENABLED,
     CONF_GROUP_ID,
     CONF_GROUP_NAME,
@@ -44,6 +45,7 @@ from .const import (
     DEFAULT_SENSORS_INTEGRATION_SUMMARY_ENABLED,
     DEFAULT_SENSORS_DISCONNECTED_SINCE_ENABLED,
     DEFAULT_SENSORS_FAILED_PINGS_ENABLED,
+    DEFAULT_SENSORS_TOTAL_FAILED_PINGS_ENABLED,
     DEFAULT_SENSORS_LAST_RESPONSE_TIME_ENABLED,
     DEVICE_SELECTION_ALL,
     DEVICE_SELECTION_EXCLUDE,
@@ -121,6 +123,7 @@ class DevicePingMonitorBaseFlow(abc.ABC, _FlowProtocol):
     log_level_device_offline: int = DEFAULT_LOG_LEVEL_DEVICE_OFFLINE
     sensors_integration_summary_enabled = DEFAULT_SENSORS_INTEGRATION_SUMMARY_ENABLED
     sensors_failed_pings_enabled = DEFAULT_SENSORS_FAILED_PINGS_ENABLED
+    sensors_total_failed_pings_enabled = DEFAULT_SENSORS_TOTAL_FAILED_PINGS_ENABLED
     sensors_disconnected_since_enabled = DEFAULT_SENSORS_DISCONNECTED_SINCE_ENABLED
     sensors_last_response_time_enabled = DEFAULT_SENSORS_LAST_RESPONSE_TIME_ENABLED
 
@@ -235,6 +238,7 @@ class DevicePingMonitorBaseFlow(abc.ABC, _FlowProtocol):
         if user_input is not None:
             self.sensors_integration_summary_enabled = bool(user_input[CONF_SENSORS_INTEGRATION_SUMMARY_ENABLED])
             self.sensors_failed_pings_enabled = bool(user_input[CONF_SENSORS_FAILED_PINGS_ENABLED])
+            self.sensors_total_failed_pings_enabled = bool(user_input[CONF_SENSORS_TOTAL_FAILED_PINGS_ENABLED])
             self.sensors_disconnected_since_enabled = bool(user_input[CONF_SENSORS_DISCONNECTED_SINCE_ENABLED])
             self.sensors_last_response_time_enabled = bool(user_input[CONF_SENSORS_LAST_RESPONSE_TIME_ENABLED])
 
@@ -249,6 +253,10 @@ class DevicePingMonitorBaseFlow(abc.ABC, _FlowProtocol):
                 vol.Optional(
                     CONF_SENSORS_FAILED_PINGS_ENABLED,
                     default=self.sensors_failed_pings_enabled,
+                ): bool,
+                vol.Optional(
+                    CONF_SENSORS_TOTAL_FAILED_PINGS_ENABLED,
+                    default=self.sensors_total_failed_pings_enabled,
                 ): bool,
                 vol.Optional(
                     CONF_SENSORS_DISCONNECTED_SINCE_ENABLED,
@@ -326,6 +334,8 @@ class DevicePingMonitorBaseFlow(abc.ABC, _FlowProtocol):
             sensors_enabled.append("Group Summary")
         if self.sensors_failed_pings_enabled:
             sensors_enabled.append("Failed Pings")
+        if self.sensors_total_failed_pings_enabled:
+            sensors_enabled.append("Total Failed Pings")
         if self.sensors_disconnected_since_enabled:
             sensors_enabled.append("Disconnected Since")
         if self.sensors_last_response_time_enabled:
@@ -826,6 +836,7 @@ class DevicePingMonitorConfigFlow(
                 CONF_DEVICE_SELECTION_MODE: self.integration_device_selection_mode,
                 CONF_SENSORS_INTEGRATION_SUMMARY_ENABLED: self.sensors_integration_summary_enabled,
                 CONF_SENSORS_FAILED_PINGS_ENABLED: self.sensors_failed_pings_enabled,
+                CONF_SENSORS_TOTAL_FAILED_PINGS_ENABLED: self.sensors_total_failed_pings_enabled,
                 CONF_SENSORS_DISCONNECTED_SINCE_ENABLED: self.sensors_disconnected_since_enabled,
                 CONF_SENSORS_LAST_RESPONSE_TIME_ENABLED: self.sensors_last_response_time_enabled,
             },
@@ -849,6 +860,7 @@ class DevicePingMonitorConfigFlow(
                 CONF_LOG_LEVEL_DEVICE_OFFLINE: self.log_level_device_offline,
                 CONF_SENSORS_INTEGRATION_SUMMARY_ENABLED: self.sensors_integration_summary_enabled,
                 CONF_SENSORS_FAILED_PINGS_ENABLED: self.sensors_failed_pings_enabled,
+                CONF_SENSORS_TOTAL_FAILED_PINGS_ENABLED: self.sensors_total_failed_pings_enabled,
                 CONF_SENSORS_DISCONNECTED_SINCE_ENABLED: self.sensors_disconnected_since_enabled,
                 CONF_SENSORS_LAST_RESPONSE_TIME_ENABLED: self.sensors_last_response_time_enabled,
             },
@@ -878,6 +890,7 @@ class DevicePingMonitorOptionsFlow(
         self.log_level_device_offline = self.config_entry.options.get(CONF_LOG_LEVEL_DEVICE_OFFLINE, DEFAULT_LOG_LEVEL_DEVICE_OFFLINE)
         self.sensors_integration_summary_enabled = self.config_entry.options.get(CONF_SENSORS_INTEGRATION_SUMMARY_ENABLED, DEFAULT_SENSORS_INTEGRATION_SUMMARY_ENABLED)
         self.sensors_failed_pings_enabled = self.config_entry.options.get(CONF_SENSORS_FAILED_PINGS_ENABLED, DEFAULT_SENSORS_FAILED_PINGS_ENABLED)
+        self.sensors_total_failed_pings_enabled = self.config_entry.options.get(CONF_SENSORS_TOTAL_FAILED_PINGS_ENABLED, DEFAULT_SENSORS_TOTAL_FAILED_PINGS_ENABLED)
         self.sensors_disconnected_since_enabled = self.config_entry.options.get(CONF_SENSORS_DISCONNECTED_SINCE_ENABLED, DEFAULT_SENSORS_DISCONNECTED_SINCE_ENABLED)
         self.sensors_last_response_time_enabled = self.config_entry.options.get(CONF_SENSORS_LAST_RESPONSE_TIME_ENABLED, DEFAULT_SENSORS_LAST_RESPONSE_TIME_ENABLED)
 
@@ -1082,6 +1095,7 @@ class DevicePingMonitorOptionsFlow(
                 CONF_LOG_LEVEL_DEVICE_OFFLINE: self.log_level_device_offline,
                 CONF_SENSORS_INTEGRATION_SUMMARY_ENABLED: self.sensors_integration_summary_enabled,
                 CONF_SENSORS_FAILED_PINGS_ENABLED: self.sensors_failed_pings_enabled,
+                CONF_SENSORS_TOTAL_FAILED_PINGS_ENABLED: self.sensors_total_failed_pings_enabled,
                 CONF_SENSORS_DISCONNECTED_SINCE_ENABLED: self.sensors_disconnected_since_enabled,
                 CONF_SENSORS_LAST_RESPONSE_TIME_ENABLED: self.sensors_last_response_time_enabled,
             },
@@ -1102,6 +1116,7 @@ class DevicePingMonitorOptionsFlow(
                 CONF_LOG_LEVEL_DEVICE_OFFLINE: self.log_level_device_offline,
                 CONF_SENSORS_INTEGRATION_SUMMARY_ENABLED: self.sensors_integration_summary_enabled,
                 CONF_SENSORS_FAILED_PINGS_ENABLED: self.sensors_failed_pings_enabled,
+                CONF_SENSORS_TOTAL_FAILED_PINGS_ENABLED: self.sensors_total_failed_pings_enabled,
                 CONF_SENSORS_DISCONNECTED_SINCE_ENABLED: self.sensors_disconnected_since_enabled,
                 CONF_SENSORS_LAST_RESPONSE_TIME_ENABLED: self.sensors_last_response_time_enabled,
             },
