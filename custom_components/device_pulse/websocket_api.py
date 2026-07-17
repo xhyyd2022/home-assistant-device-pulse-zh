@@ -28,8 +28,10 @@ from .const import (
     ENTITY_ATTR_INTEGRATION_CUSTOM_GROUP,
     ENTITY_ATTR_STATE_SINCE,
     ENTITY_ATTR_PINGS_FAILED,
+    ENTITY_ATTR_COUNT_STARTED_AT,
     ENTITY_TAG_PING_STATUS,
     ENTITY_TAG_PINGS_FAILED_COUNT,
+    ENTITY_TAG_TOTAL_FAILED_PINGS_COUNT,
     ENTITY_TAG_LAST_RESPONSE_TIME,
     EVENT_DEVICE_WENT_OFFLINE,
     EVENT_DEVICE_CAME_ONLINE,
@@ -147,6 +149,7 @@ async def ws_get_devices(
         # TODO: add config entry check and determine if optional sensors are enabled or not
         last_response_time = None
         pings_failed_count = None
+        total_failed_pings_count = None
 
         for device_entity in er.async_entries_for_device(entity_registry, device_id):
             device_entity_state = hass.states.get(device_entity.entity_id)
@@ -158,6 +161,13 @@ async def ws_get_devices(
                     "state": device_entity_state.state if ping_status.get("state") == "off" else None,
                     "unit_of_measurement": None
                 }
+            elif device_entity_state.attributes.get(ENTITY_ATTR_TAG) == ENTITY_TAG_TOTAL_FAILED_PINGS_COUNT:
+                total_failed_pings_count = {
+                    "entity_id": device_entity.entity_id,
+                    "state": device_entity_state.state,
+                    "unit_of_measurement": device_entity.unit_of_measurement,
+                    "count_started_at": device_entity_state.attributes.get(ENTITY_ATTR_COUNT_STARTED_AT),
+                }
             elif device_entity_state.attributes.get(ENTITY_ATTR_TAG) == ENTITY_TAG_LAST_RESPONSE_TIME:
                 last_response_time = {
                     "entity_id": device_entity.entity_id,
@@ -168,6 +178,7 @@ async def ws_get_devices(
             if (
                 last_response_time is not None
                 and pings_failed_count is not None
+                and total_failed_pings_count is not None
             ):
                 break
 
@@ -181,6 +192,7 @@ async def ws_get_devices(
             "ping_status": ping_status,
             "ping_status_since_timestamp": ping_status_since_timestamp,
             "pings_failed_count": pings_failed_count,
+            "total_failed_pings_count": total_failed_pings_count,
             "last_response_time": last_response_time,
         }
 
